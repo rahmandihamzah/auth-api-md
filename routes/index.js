@@ -1,7 +1,9 @@
 const express = require('express')
 const route = express.Router()
-const AuthController = require('../controllers/authController')
+const userRoutes = require('./userRoutes')
+const authRoutes = require('./authRoutes')
 
-route.get('/', AuthController.login)
+route.use('/user', userRoutes)
+route.use('/auth', authRoutes)
 
 module.exports = route
