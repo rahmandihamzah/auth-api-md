@@ -2,13 +2,14 @@ const { User } = require('../models')
 const emailHelper = require('../helpers/emailHelper')
 const { verifyToken } = require('../helpers/jwt')
 const generateOtp = require('../helpers/generateOtp')
+const { hashPassword, comparePassword } = require('../helpers/bcrypt')
 
 class AuthController {
   static reqOtpCode (req, res, next) {
     const { access_token } = req.headers
     const { email, id } = verifyToken(access_token)
     const otpCode = generateOtp()
-    console.log(otpCode, typeof otpCode)
+    const hashedOtpCode = hashPassword(otpCode)
 
     User.findOne({
       where: {
@@ -36,7 +37,7 @@ class AuthController {
               res.status(200).json({
                 msg: 'Send OTP code complete',
                 userId: id,
-                otpCode,
+                otpCode: hashedOtpCode,
                 info
               })
             }
@@ -55,6 +56,7 @@ class AuthController {
     const { access_token } = req.headers
     const { id } = verifyToken(access_token)
     const { userId, otpCodeFromServer, otpCodeFromUser } = req.body
+    let verifiedOtpCode = comparePassword(otpCodeFromUser, otpCodeFromServer)
     let verified
     let err = {
       name: '',
@@ -62,7 +64,7 @@ class AuthController {
     }
 
     if (userId == id) {
-      if (otpCodeFromServer == otpCodeFromUser) {
+      if (verifiedOtpCode) {
         verified = true
         res.status(200).json({
           msg: 'OTP Code Verified',

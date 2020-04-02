@@ -48,6 +48,11 @@ module.exports = (sequelize, DataTypes) => {
     hooks: {
       beforeCreate: function (user, options) {
         user.password = hashPassword(user.password)
+      },
+      beforeBulkUpdate : function (user, options) {
+        const { password } = user.attributes
+        const newPassword = hashPassword(password)
+        user.attributes.password = newPassword
       }
     }
   })
