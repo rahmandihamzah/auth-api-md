@@ -86,27 +86,42 @@ class AuthController {
       name: ''
     }
 
-    const mailOption = {
-      from: 'rahmandi.testmail@gmail.com',
-      to: email,
-      subject: 'OTP Code',
-      text: `${otpCode} is your OTP Code. Do not share it with anyone`
-    }
-
-    emailHelper.sendMail(mailOption, (error, info) => {
-      if (error)
-      {
-        err.name = 'sendOtpError'
-        next(err)
-      } else
-      {
-        res.status(200).json({
-          msg: 'Send OTP code complete',
-          token,
-          info
-        })
+    User.findOne({
+      where: {
+        email
       }
     })
+      .then(response => {
+        if (response) {
+          const mailOption = {
+            from: 'rahmandi.testmail@gmail.com',
+            to: email,
+            subject: 'OTP Code',
+            text: `${otpCode} is your OTP Code. Do not share it with anyone`
+          }
+
+          emailHelper.sendMail(mailOption, (error, info) => {
+            if (error)
+            {
+              err.name = 'sendOtpError'
+              next(err)
+            } else
+            {
+              res.status(200).json({
+                msg: 'Send OTP code complete',
+                token,
+                info
+              })
+            }
+          })
+        } else {
+          err.name = 'userNotFound'
+          next(err)
+        }
+      })
+      .catch(err => {
+        next(err)
+      })
   }
 
   static resetPassword (req, res, next) {
